@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customers - Lisa Spa</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0.3s;}
+.sidebar{width:240px;background-color:#FF69B4;color:white;display:flex;flex-direction:column;padding:20px;position:fixed;top:0;left:0;height:100%;z-index:200;transition:0.3s;}
+.sidebar h2{text-align:center;margin-bottom:30px;font-size:1.6rem;}
+.sidebar a{color:white;padding:10px 15px;margin:5px 0;border-radius:8px;text-decoration:none;display:block;transition:0.3s;cursor:pointer;}
+.sidebar a:hover, .sidebar a.active{background:rgba(255,255,255,0.2);}
+.submenu{display:none;margin-left:15px;overflow:hidden;transition:0.3s;}
+.sidebar a.expand::after{content:'▾';float:right;transition:0.3s;}
+.sidebar a.expand.active::after{content:'▴';}
+.main{flex:1;overflow-y:auto;padding:20px;margin-left:240px;transition:0.3s;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;position:relative;}
+.header h1{color:#FF69B4;}
+.hamburger{display:none;font-size:1.5rem;cursor:pointer;margin-right:10px;}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);opacity:0;visibility:hidden;transition:0.3s;z-index:100;}
+.overlay.active{opacity:1;visibility:visible;}
+
+/* Summary Cards */
+.summary-cards {display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;}
+.summary-card {flex:1 1 150px; background:#fff; padding:15px; border-radius:10px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.05); transition:0.3s;}
+.summary-card:hover { transform:translateY(-3px); }
+.summary-card h3 { margin:5px 0; color:#FF69B4; }
+.summary-card p { margin:0; font-weight:bold; font-size:1.2rem; }
+
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center;}
+.controls input,.controls select{padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:0.95rem;}
+.controls input{flex:1; min-width:200px;}
+.controls select{min-width:150px;}
+
+/* Table */
+.table-container{background:#fff;padding:15px;border-radius:12px;overflow-x:auto;box-shadow:0 4px 15px rgba(0,0,0,0.05);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px;text-align:left;border-bottom:1px solid #e2e8f0;}
+th{background:#FF69B4;color:white;cursor:pointer;}
+tr:hover{background:#ffe6f0;}
+
+/* Pagination */
+.pagination{margin-top:15px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.pagination button{padding:5px 10px;border:none;border-radius:5px;background:#FF69B4;color:white;cursor:pointer;transition:0.2s;}
+.pagination button.active, .pagination button:hover{background:#FF00FF;}
+
+/* Export Button */
+#exportBtn{padding:8px 12px;background:#FF69B4;color:white;border:none;border-radius:5px;cursor:pointer;transition:0.2s;}
+#exportBtn:hover{background:#FF00FF;}
+
+/* Responsive */
+@media(max-width:992px){.sidebar{left:-260px;}.sidebar.active{left:0;}.main{margin-left:0;}.hamburger{display:block;}}
+@media(max-width:768px){.summary-cards{flex-direction:column;}.controls{flex-direction:column;}.controls input,.controls select{width:100%;}}
+
+.onspec{
+    gap: 10px;
+}
+
+@media(max-width: 900px) {
+    .onspec{
+        justify-content: space-between;
+        margin-left: -50%;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <h2>Lisa Spa</h2>
+  <a href="index.html">Dashboard</a>
+  <a href="allbookings.html">Bookings</a>
+  <a href="customers.html" class="active">Customers</a>
+  <a href="services.html">Manage Services</a>
+  <a href="reviews.html">Customer Reviews</a>
+  <a href="#">Settings</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="header">
+    <div style="display:flex;align-items:center;">
+      <span class="hamburger" id="hamburger">☰</span>
+      <h1>Customers</h1>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <h3>Total Customers</h3>
+      <p id="totalCustomers">0</p>
+    </div>
+    <div class="summary-card">
+      <h3>Total Bookings</h3>
+      <p id="totalCustomerBookings">0</p>
+    </div>
+    <div class="summary-card">
+      <h3>Total Revenue</h3>
+      <p id="totalRevenue">₦0</p>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search by name, email, or phone">
+    <select id="sortSelect">
+      <option value="name_asc">Name ↑</option>
+      <option value="name_desc">Name ↓</option>
+      <option value="bookings_desc">Bookings ↓</option>
+      <option value="bookings_asc">Bookings ↑</option>
+      <option value="totalPaid_desc">Total Paid ↓</option>
+      <option value="totalPaid_asc">Total Paid ↑</option>
+    </select>
+    <div style="display: flex;" class="onspec">
+        <label style="display: flex; align-items: center;">
+            <input type="checkbox" id="frequentToggle">
+            <span style="margin-left: -90px;">Frequent Customers Only</span>
+        </label>
+        <button id="exportBtn">Export CSV</button>
+    </div>
+    
+  </div>
+
+  <!-- Customers Table -->
+  <div class="table-container">
+    <table id="customersTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Number of Bookings</th>
+          <th>Total Paid</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic rows here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
+  authDomain: "lisaartistryspa-761ac.firebaseapp.com",
+  projectId: "lisaartistryspa-761ac",
+  storageBucket: "lisaartistryspa-761ac.firebasestorage.app",
+  messagingSenderId: "974775812115",
+  appId: "1:974775812115:web:ba03bce66cf7eb147f3fe6"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const searchInput = document.getElementById('searchInput');
+const tableBody = document.querySelector('#customersTable tbody');
+const sortSelect = document.getElementById('sortSelect');
+const paginationContainer = document.getElementById('pagination');
+const frequentToggle = document.getElementById('frequentToggle');
+const exportBtn = document.getElementById('exportBtn');
+
+let allCustomers = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+
+// Hamburger & overlay
+const sidebar = document.getElementById('sidebar');
+const hamburger = document.getElementById('hamburger');
+const overlay = document.getElementById('overlay');
+hamburger.addEventListener('click', ()=>{ sidebar.classList.add('active'); overlay.classList.add('active'); });
+overlay.addEventListener('click', ()=>{ sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+
+// Render Customers Table with Pagination
+function renderCustomers(){
+  const searchText = searchInput.value.toLowerCase();
+
+  let filtered = allCustomers.filter(c => 
+    c.name.toLowerCase().includes(searchText) || 
+    c.email.toLowerCase().includes(searchText) ||
+    c.phone.toLowerCase().includes(searchText)
+  );
+
+  if(frequentToggle.checked){
+    filtered = filtered.filter(c => c.bookings > 5);
+  }
+
+  // Sorting
+  const sortValue = sortSelect.value;
+  filtered.sort((a,b)=>{
+    switch(sortValue){
+      case 'name_asc': return a.name.localeCompare(b.name);
+      case 'name_desc': return b.name.localeCompare(a.name);
+      case 'bookings_asc': return a.bookings - b.bookings;
+      case 'bookings_desc': return b.bookings - a.bookings;
+      case 'totalPaid_asc': return a.totalPaid - b.totalPaid;
+      case 'totalPaid_desc': return b.totalPaid - a.totalPaid;
+      default: return 0;
+    }
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  if(currentPage > totalPages) currentPage = totalPages || 1;
+  const start = (currentPage-1)*rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageItems = filtered.slice(start,end);
+
+  tableBody.innerHTML = '';
+  pageItems.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.name}${c.bookings>5 ? '<span style="color:#DE3163;margin-left:5px;font-size:0.8rem;">⭐</span>' : ''}</td>
+      <td>${c.phone}</td>
+      <td>${c.email}</td>
+      <td>${c.bookings}</td>
+      <td>₦${c.totalPaid.toLocaleString()}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  // Pagination buttons
+  paginationContainer.innerHTML = '';
+  for(let i=1;i<=totalPages;i++){
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    if(i===currentPage) btn.classList.add('active');
+    btn.addEventListener('click',()=>{ currentPage=i; renderCustomers(); });
+    paginationContainer.appendChild(btn);
+  }
+}
+
+// Firestore real-time
+onSnapshot(collection(db,'bookings'), snapshot => {
+  const customersMap = {};
+  let totalRevenue = 0;
+  let totalBookings = snapshot.docs.length;
+
+  snapshot.docs.forEach(docSnap => {
+    const data = docSnap.data();
+    const email = data.email;
+
+    if(!customersMap[email]){
+      customersMap[email] = { 
+        name: data.customerName, email: email, phone: data.phone || '—', bookings: 0, totalPaid: 0 
+      };
+    }
+
+    customersMap[email].bookings++;
+    customersMap[email].totalPaid += Number(data.amountPaid)||0;
+    totalRevenue += Number(data.amountPaid)||0;
+  });
+
+  allCustomers = Object.values(customersMap);
+
+  // Update summary cards
+  document.getElementById('totalCustomers').textContent = allCustomers.length;
+  document.getElementById('totalCustomerBookings').textContent = totalBookings;
+  document.getElementById('totalRevenue').textContent = `₦${totalRevenue.toLocaleString()}`;
+
+  renderCustomers();
+});
+
+// Event Listeners
+searchInput.addEventListener('input', ()=>{ currentPage=1; renderCustomers(); });
+sortSelect.addEventListener('change', ()=>{ currentPage=1; renderCustomers(); });
+frequentToggle.addEventListener('change', ()=>{ currentPage=1; renderCustomers(); });
+
+// CSV Export with choice
+exportBtn.addEventListener('click', () => {
+  const choice = prompt("Type 'all' to export all filtered customers or 'page' to export current page:", "page");
+  if(!choice) return;
+
+  const searchText = searchInput.value.toLowerCase();
+  let filtered = allCustomers.filter(c => 
+    c.name.toLowerCase().includes(searchText) || 
+    c.email.toLowerCase().includes(searchText) ||
+    c.phone.toLowerCase().includes(searchText)
+  );
+
+  if(frequentToggle.checked){
+    filtered = filtered.filter(c => c.bookings > 5);
+  }
+
+  let exportData = [];
+  if(choice.toLowerCase() === 'all'){
+    exportData = filtered;
+  } else {
+    const start = (currentPage-1)*rowsPerPage;
+    const end = start + rowsPerPage;
+    exportData = filtered.slice(start,end);
+  }
+
+  let csv = 'Name,Phone,Email,Bookings,TotalPaid\n';
+  exportData.forEach(row => {
+    csv += `${row.name},${row.phone},${row.email},${row.bookings},${row.totalPaid}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", "customers.csv");
+  link.click();
+});
+
+</script>
+</body>
+</html>

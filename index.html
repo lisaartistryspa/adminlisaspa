@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard - Lisa Spa</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+.active{
+  background:rgba(255,255,255,0.2);
+}
+body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0.3s;}
+.sidebar{width:240px;background-color:#FF69B4;color:white;display:flex;flex-direction:column;padding:20px;position:fixed;top:0;left:0;height:100%;z-index:200;transition:0.3s;}
+.sidebar h2{text-align:center;margin-bottom:30px;font-size:1.6rem;}
+.sidebar a{color:white;padding:10px 15px;margin:5px 0;border-radius:8px;text-decoration:none;display:block;transition:0.3s;cursor:pointer;}
+.sidebar a:hover{background:rgba(255,255,255,0.2);}
+.submenu{display:none;margin-left:15px;overflow:hidden;transition:0.3s;}
+.sidebar a.expand::after{content:'▾';float:right;transition:0.3s;}
+.sidebar a.expand.active::after{content:'▴';}
+.main{flex:1;overflow-y:auto;padding:20px;margin-left:240px;transition:0.3s;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;position:relative;}
+.header h1{color:#FF69B4;}
+.notifications{position:relative;cursor:pointer;font-size:1.3rem;}
+.notifications span{position:absolute;top:-8px;right:-8px;background:#FF69B4;color:white;font-size:0.7rem;padding:3px 6px;border-radius:50%;}
+#notifDropdown{display:none;position:absolute;right:0;top:30px;background:#fff;color:#1a202c;width:300px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:1000;max-height:400px;overflow-y:auto;}
+#notifDropdown div{padding:10px;border-bottom:1px solid #e2e8f0;}
+.summary-cards{display:flex;flex-wrap:wrap;gap:15px;margin-bottom:20px;}
+.summary-card{flex:1 1 150px;background:#ebe1e3;padding:15px;border-radius:12px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.05);transition:0.3s;}
+.summary-card:hover{transform:translateY(-3px);}
+.summary-card h3{margin:5px 0;color:#FF69B4;}
+.summary-card p{margin:0;font-weight:bold;font-size:1.1rem;}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center;}
+.controls input,.controls select,.controls button{padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:0.95rem;}
+.controls button{background:#FF69B4;color:white;border:none;cursor:pointer;transition:0.2s;}
+.controls button:hover{background:#FF00FF;}
+.booking-info{background:#f0f7ff;padding:15px 20px;border-radius:12px;margin-top:15px;display:flex;justify-content:space-between;align-items:center;transition:0.3s,box-shadow 0.3s;flex-wrap:wrap;opacity:0;transform:translateY(10px);}
+.booking-info.show{opacity:1;transform:translateY(0);}
+.booking-info:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.1);}
+.booking-details p{margin:3px 0;font-size:0.95rem;}
+.booking-actions select{padding:8px;border-radius:8px;border:1px solid #cbd5e1;}
+.badge{padding:3px 8px;border-radius:12px;color:white;font-size:0.8rem;font-weight:bold;}
+.badge.pending{background:#FFB6C1;}
+.badge.confirmed{background:#FF00FF;}
+.badge.completed{background:#16a34a;}
+.badge.canceled{background:#ef4444;}
+.selectBooking{margin-right:10px;}
+.hamburger{display:none;font-size:1.5rem;cursor:pointer;margin-right:10px;}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);opacity:0;visibility:hidden;transition:0.3s;z-index:100;}
+.overlay.active{opacity:1;visibility:visible;}
+@media(max-width:992px){.sidebar{left:-260px;}.sidebar.active{left:0;}.main{margin-left:0;}.hamburger{display:block;}}
+@media(max-width:768px){.summary-cards{flex-direction:column;}.booking-info{flex-direction:column;align-items:flex-start;}.booking-actions{margin-top:10px;width:100%;}.controls{flex-direction:column;}.controls input,.controls select,.controls button{width:100%;}}
+@media(max-width:480px){.booking-details small{display:block;margin-top:5px;}#notifDropdown{width:90vw;right:5vw;}}
+.date-field {
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+  width:200px;
+}
+
+@media(max-width: 900px){
+    .date-field{
+      width: 100%;
+    }
+}
+.date-field input {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  width: 200px;
+  transition: all 0.2s ease;
+}
+
+.date-field label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #777;
+  background: white;
+  padding: 0 4px;
+  pointer-events: none;
+  font-size: 14px;
+  transition: 0.2s ease all;
+}
+
+.date-field input:focus,
+.date-field input:not(:placeholder-shown),
+.date-field input:valid {
+  border-color: #DE3163;
+}
+
+.date-field input:focus + label,
+.date-field input:valid + label {
+  top: -8px;
+  left: 10px;
+  font-size: 12px;
+  color: #DE3163;
+}
+
+
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <h2>Lisa Spa</h2>
+  <a href="index.html" class="active">Dashboard</a>
+  <a href="allbookings.html">All Bookings</a>
+  <a href="customers.html">Customers</a>
+  <a href="services.html">Manage Services</a>
+  <a href="reviews.html">Customer Reviews</a>
+  <a href="#">Settings</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <div class="header">
+      <div style="display:flex;align-items:center;">
+      <span class="hamburger" id="hamburger">☰</span>
+      <h1>Admin Dashboard</h1>
+      </div>
+      <div class="notifications" id="notifBell">
+      🔔 <span id="notifCount">0</span>
+      <div id="notifDropdown">
+          <div style="font-weight:bold;border-bottom:1px solid #e2e8f0;">New Bookings</div>
+          <div id="newBookingsList"></div>
+      </div>
+      </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+      <div class="summary-card"><p id="totalBookings">0</p><h3>Total</h3></div>
+      <div class="summary-card"><p id="pendingBookings">0</p><h3>Pending</h3></div>
+      <div class="summary-card"><p id="confirmedBookings">0</p><h3>Confirmed</h3></div>
+      <div class="summary-card"><p id="completedBookings">0</p><h3>Completed</h3></div>
+      <div class="summary-card"><p id="canceledBookings">0</p><h3>Canceled</h3></div>
+  </div>
+
+  <!-- Controls -->
+  
+  <div class="controls" style="display: none;">
+      
+    <div >
+      <label style="display:flex; column-gap:5px;" ><input type="checkbox" id="selectAll"> <span>Select All</span></label>
+
+      
+      <select id="bulkAction">
+      <option value="">Bulk Action</option>
+      <option value="pending">Mark as Pending</option>
+      <option value="confirmed">Mark as Confirmed</option>
+      <option value="completed">Mark as Completed</option>
+      <option value="canceled">Mark as Canceled</option>
+      </select>
+
+      
+      <button id="applyBulk">Apply</button>
+      <input type="text" id="searchInput" placeholder="Search by name, email, or ID">
+      <select id="statusFilter">
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="completed">Completed</option>
+      <option value="canceled">Canceled</option>
+      </select>
+      <select id="sortOrder">
+      <option value="asc">Sort by Date & Time ↑</option>
+      <option value="desc">Sort by Date & Time ↓</option>
+      </select>
+      <div class="date-field">
+          <input type="date" id="dateFilter" required>
+          <label for="dateFilter">Filter bookings by date</label>
+      </div>
+
+
+      <!-- Bookings List  -->
+      <div id="bookingsList"></div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card" style="visibility: visible;">
+      <canvas id="bookingChart"></canvas>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
+  authDomain: "lisaartistryspa-761ac.firebaseapp.com",
+  projectId: "lisaartistryspa-761ac",
+  storageBucket: "lisaartistryspa-761ac.firebasestorage.app",
+  messagingSenderId: "974775812115",
+  appId: "1:974775812115:web:ba03bce66cf7eb147f3fe6"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const bookingsList = document.getElementById('bookingsList');
+const searchInput = document.getElementById('searchInput');
+const statusFilter = document.getElementById('statusFilter');
+const sortOrder = document.getElementById('sortOrder');
+const dateFilter = document.getElementById('dateFilter');
+const notifCountEl = document.getElementById('notifCount');
+const notifBell = document.getElementById('notifBell');
+const notifDropdown = document.getElementById('notifDropdown');
+const newBookingsList = document.getElementById('newBookingsList');
+const selectAllCheckbox = document.getElementById('selectAll');
+const bulkActionSelect = document.getElementById('bulkAction');
+const applyBulkBtn = document.getElementById('applyBulk');
+let allBookings = [];
+let lastSeenBookingCount = 0;
+
+// Hamburger & overlay
+const sidebar = document.getElementById('sidebar');
+const hamburger = document.getElementById('hamburger');
+const overlay = document.getElementById('overlay');
+hamburger.addEventListener('click', ()=>{ sidebar.classList.add('active'); overlay.classList.add('active'); });
+overlay.addEventListener('click', ()=>{ sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+
+// Sidebar submenu toggle
+document.querySelectorAll('.sidebar .expand').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    item.classList.toggle('active');
+    const next = item.nextElementSibling;
+    if(next){ next.style.display = next.style.display==='block'?'none':'block'; }
+  });
+});
+
+// Sidebar submenu links filter
+document.querySelectorAll('.submenu a').forEach(link=>{
+  link.addEventListener('click', e=>{
+    e.preventDefault();
+    const status = link.dataset.status || '';
+    statusFilter.value = status;
+    renderBookings();
+  });
+});
+
+// Update Summary Cards
+function updateSummary(){
+  const total = allBookings.length;
+  const pending = allBookings.filter(b=>b.data.status==='pending').length;
+  const confirmed = allBookings.filter(b=>b.data.status==='confirmed').length;
+  const completed = allBookings.filter(b=>b.data.status==='completed').length;
+  const canceled = allBookings.filter(b=>b.data.status==='canceled').length;
+  document.getElementById('totalBookings').textContent = total;
+  document.getElementById('pendingBookings').textContent = pending;
+  document.getElementById('confirmedBookings').textContent = confirmed;
+  document.getElementById('completedBookings').textContent = completed;
+  document.getElementById('canceledBookings').textContent = canceled;
+
+  const newCount = allBookings.length - lastSeenBookingCount;
+  notifCountEl.textContent = newCount > 0 ? newCount : 0;
+}
+
+// Render Bookings
+function renderBookings(){
+  const searchText = searchInput.value.toLowerCase();
+  const filterStatus = statusFilter.value;
+  const sortDir = sortOrder.value;
+  const filterDate = dateFilter.value;
+  bookingsList.innerHTML = '';
+
+  let filteredBookings = allBookings.filter(({data})=>{
+    const { customerName,email,paystackReference,status,date } = data;
+    if(searchText && !`${customerName} ${email} ${paystackReference}`.toLowerCase().includes(searchText)) return false;
+    if(filterStatus && status !== filterStatus) return false;
+    if(filterDate && date !== filterDate) return false;
+    return true;
+  });
+
+  filteredBookings.sort((a,b)=>{
+    const dateA = new Date(`${a.data.date}T${a.data.time}`);
+    const dateB = new Date(`${b.data.date}T${b.data.time}`);
+    return sortDir==='asc'? dateA - dateB : dateB - dateA;
+  });
+
+  filteredBookings.forEach(({id,data},index)=>{
+    const { customerName,email,service,date,time,paystackReference,status } = data;
+    const div = document.createElement('div');
+    div.className='booking-info';
+    div.innerHTML=`
+      <div class="booking-details">
+        <input type="checkbox" class="selectBooking" data-id="${id}">
+        <strong>${customerName}</strong> - ${service}<br>
+        <small>${date} at ${time} | ID: ${paystackReference} | Status: <span class="badge ${status}">${status.toUpperCase()}</span></small>
+      </div>
+      <div class="booking-actions">
+        <select class="statusSelect" data-id="${id}">
+          <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+          <option value="confirmed" ${status==='confirmed'?'selected':''}>Confirmed</option>
+          <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
+          <option value="canceled" ${status==='canceled'?'selected':''}>Canceled</option>
+        </select>
+      </div>
+    `;
+    bookingsList.appendChild(div);
+    setTimeout(()=>{div.classList.add('show');}, index*50);
+  });
+
+  // Listen for individual status change
+  bookingsList.querySelectorAll('.statusSelect').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const id = sel.dataset.id;
+      const newStatus = sel.value;
+      await updateDoc(doc(db,'bookings',id),{status:newStatus});
+      updateSummary();
+      renderChart();
+    });
+  });
+}
+
+// Chart
+let bookingChart;
+function renderChart(){
+  const counts={};
+  allBookings.forEach(b=>{ counts[b.data.date] = (counts[b.data.date]||0)+1; });
+  const labels=Object.keys(counts).sort();
+  const data=Object.values(counts);
+  if(bookingChart) bookingChart.destroy();
+  const ctx=document.getElementById('bookingChart').getContext('2d');
+  bookingChart = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Bookings per Day',data,backgroundColor:'#de3163'}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, stepSize:1}}}
+  });
+}
+
+// New Bookings
+function updateNewBookings(){
+  const sortedBookings = allBookings.sort((a,b)=> new Date(`${b.data.date}T${b.data.time}`)- new Date(`${a.data.date}T${a.data.time}`)).slice(0,5);
+  newBookingsList.innerHTML='';
+  sortedBookings.forEach(({data})=>{
+    const div = document.createElement('div');
+    div.innerHTML=`<strong>${data.customerName}</strong> (${data.service})<br><small>${data.date} at ${data.time}</small>`;
+    newBookingsList.appendChild(div);
+  });
+}
+
+// Toggle notification dropdown
+notifBell.addEventListener('click', ()=>{
+  notifDropdown.style.display = notifDropdown.style.display==='block'?'none':'block';
+  lastSeenBookingCount = allBookings.length;
+  updateSummary();
+});
+
+// Firestore real-time
+onSnapshot(collection(db,'bookings'), snapshot=>{
+  allBookings = snapshot.docs.map(docSnap=>({id:docSnap.id, data:docSnap.data()}));
+  updateSummary();
+  renderBookings();
+  renderChart();
+  updateNewBookings();
+
+});
+
+// Filters & Search
+searchInput.addEventListener('input', renderBookings);
+statusFilter.addEventListener('change', renderBookings);
+sortOrder.addEventListener('change', renderBookings);
+dateFilter.addEventListener('change', renderBookings);
+
+// Bulk Actions
+selectAllCheckbox.addEventListener('change', ()=>{
+  const checked = selectAllCheckbox.checked;
+  document.querySelectorAll('.selectBooking').forEach(cb=>cb.checked = checked);
+});
+applyBulkBtn.addEventListener('click', async ()=>{
+  const selectedAction = bulkActionSelect.value;
+  if(!selectedAction) return alert('Please select a bulk action.');
+  const selectedIds = Array.from(document.querySelectorAll('.selectBooking:checked')).map(cb=>cb.dataset.id);
+  if(selectedIds.length===0) return alert('Please select at least one booking.');
+  try{
+    const updates = selectedIds.map(id=>updateDoc(doc(db,'bookings',id),{status:selectedAction}));
+    await Promise.all(updates);
+    alert('Bulk update successful.');
+  } catch(e){ console.error(e); alert('Bulk update failed.'); }
+});
+
+// Close sidebar on small screens when a main sidebar link is clicked (excluding expand toggles)
+document.querySelectorAll('.sidebar a:not(.expand)').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 992) { // small screens only
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+function renderCustomers(){
+  const tableBody=document.querySelector('#customersTable tbody');
+  const customersMap={};
+  allBookings.forEach(({data})=>{
+    const {customerName,email,phone,amountPaid}=data;
+    if(!customersMap[email]){
+      customersMap[email]={name:customerName,email,phone:phone||'—',bookings:0,totalPaid:0};
+    }
+    customersMap[email].bookings++;
+    customersMap[email].totalPaid += Number(amountPaid)||0;
+  });
+  tableBody.innerHTML='';
+  Object.values(customersMap).forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${c.name}</td>
+      <td>${c.phone}</td>
+      <td>${c.email}</td>
+      <td>${c.bookings}</td>
+      <td>${c.totalPaid.toLocaleString()}</td>`;
+    tableBody.appendChild(tr);
+  });
+}
+
+</script>
+
+</body>
+</html>

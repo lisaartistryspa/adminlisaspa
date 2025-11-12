@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard – Lisa Spa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<style>
+/* RESET & BASE STYLES */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { display: flex; min-height: 100vh; background: #f6f9fc; color: #1a202c; overflow-x: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; background-color: #FF69B4; color: white;
+  display: flex; flex-direction: column; padding: 20px;
+  position: fixed; top: 0; left: 0; height: 100%;
+  z-index: 200; transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+.sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 1.5rem; }
+.sidebar a { color: white; padding: 10px 15px; margin: 5px 0; border-radius: 8px; text-decoration: none; display: block; transition: 0.3s; }
+.sidebar a:hover { background: rgba(255,255,255,0.2); }
+.sidebar a.active { background: rgba(255,255,255,0.25); }
+
+/* MAIN CONTENT */
+.main { flex: 1; margin-left: 240px; padding: 25px; transition: margin-left 0.3s ease; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.header h1 { color: #FF69B4; font-size: 1.6rem; flex: 1; }
+
+/* HAMBURGER BUTTON */
+.hamburger { display: none; font-size: 1.8rem; background: none; border: none; color: #FF69B4; cursor: pointer; transition: transform 0.3s; }
+.hamburger:hover { transform: scale(1.1); }
+
+/* REVIEWS CARD */
+section { margin-bottom: 40px; }
+section h2 { margin-bottom: 15px; color: #FF69B4; }
+.reviews-container {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
+.review-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 5px solid transparent; /* default */
+  transition: transform 0.2s;
+}
+.review-card:hover { transform: translateY(-2px); }
+.review-card p { font-size: 1rem; margin-bottom: 10px; color: #333; }
+.review-card strong { margin-bottom: 15px; display: block; }
+.review-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.approve { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+.reject { background: #f44336; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+.remove { background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+
+.approve:hover, .reject:hover, .remove:hover { transform: scale(1.05); }
+
+/* STATUS COLORS */
+.pending { border-left-color: #FFC107; }
+.approved { border-left-color: #4CAF50; }
+.rejected { border-left-color: #f44336; }
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 992px) {
+  .main { margin-left: 0; padding: 20px; }
+  .sidebar { transform: translateX(-100%); position: fixed; box-shadow: none; }
+  .sidebar.active { transform: translateX(0); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+  .hamburger { display: block; }
+  .header { position: sticky; top: 0; background: #f6f9fc; z-index: 150; padding: 10px 0; }
+  body.sidebar-open { overflow: hidden; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h2>Lisa Spa</h2>
+  <a href="index.html">Dashboard</a>
+  <a href="allbookings.html">Bookings</a>
+  <a href="customers.html">Customers</a>
+  <a href="services.html">Manage Services</a>
+  <a href="reviews.html" class="active">Customer Reviews</a>
+  <a href="#">Settings</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="header">
+    <button class="hamburger" id="menuBtn">☰</button>
+    <h1>Manage Customer Reviews</h1>
+  </div>
+
+  <!-- Pending Reviews Section -->
+  <section>
+    <h2 style="color: #DA70D6;">Pending Reviews</h2>
+    <div class="reviews-container" id="pendingReviews"></div>
+  </section>
+
+  <!-- Approved Reviews Section -->
+  <section>
+    <h2>Approved Reviews</h2>
+    <div class="reviews-container" id="approvedReviews"></div>
+  </section>
+
+  <!-- Rejected Reviews Section -->
+  <section>
+    <h2 style="color: #FFC0CB;">Rejected Reviews</h2>
+    <div class="reviews-container" id="rejectedReviews"></div>
+  </section>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
+  authDomain: "lisaartistryspa-761ac.firebaseapp.com",
+  projectId: "lisaartistryspa-761ac",
+  storageBucket: "lisaartistryspa-761ac.firebasestorage.app",
+  messagingSenderId: "974775812115",
+  appId: "1:974775812115:web:ba03bce66cf7eb147f3fe6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Sidebar toggle
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+  document.body.classList.toggle('sidebar-open');
+});
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 992) {
+      sidebar.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    }
+  });
+});
+
+const pendingReviews = document.getElementById('pendingReviews');
+const approvedReviews = document.getElementById('approvedReviews');
+const rejectedReviews = document.getElementById('rejectedReviews');
+
+// Real-time listener
+onSnapshot(collection(db, "reviews"), snapshot => {
+  pendingReviews.innerHTML = '';
+  approvedReviews.innerHTML = '';
+  rejectedReviews.innerHTML = '';
+
+  snapshot.forEach(docSnap => {
+    const review = docSnap.data();
+    const div = document.createElement('div');
+    div.classList.add('review-card', review.status);
+    div.innerHTML = `
+      <p>"${review.review}"</p>
+      <strong>- ${review.name}</strong>
+    `;
+
+    if (review.status === "pending") {
+      div.innerHTML += `
+        <div class="review-actions">
+          <button class="approve" data-id="${docSnap.id}">Approve</button>
+          <button class="reject" data-id="${docSnap.id}">Reject</button>
+        </div>
+      `;
+      pendingReviews.appendChild(div);
+    } else if (review.status === "approved") {
+      div.innerHTML += `
+        <div class="review-actions">
+          <button class="remove" data-id="${docSnap.id}">Remove</button>
+        </div>
+      `;
+      approvedReviews.appendChild(div);
+    } else if (review.status === "rejected") {
+      rejectedReviews.appendChild(div);
+    }
+  });
+});
+
+// Approve / Reject functionality
+pendingReviews.addEventListener('click', async e => {
+  const id = e.target.dataset.id;
+  if (e.target.classList.contains('approve')) {
+    await updateDoc(doc(db, "reviews", id), { status: "approved" });
+  }
+  if (e.target.classList.contains('reject')) {
+    await updateDoc(doc(db, "reviews", id), { status: "rejected" });
+  }
+});
+
+// Remove functionality for approved reviews
+approvedReviews.addEventListener('click', async e => {
+  if (e.target.classList.contains('remove')) {
+    const id = e.target.dataset.id;
+    if (confirm("Are you sure you want to permanently delete this review?")) {
+      await deleteDoc(doc(db, "reviews", id));
+    }
+  }
+});
+</script>
+
+</body>
+</html>
