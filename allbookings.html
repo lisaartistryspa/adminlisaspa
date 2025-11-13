@@ -2,16 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard - Lisa Spa</title>
+<title>Admin Dashboard - Lisa Spa | All Bookings</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Merienda+One%7cMontserrat:300,400,500,600,700,800,900" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script>
+  const admin = sessionStorage.getItem('adminUser');
+
+  if (!admin) {
+    // If not logged in, redirect immediately
+    window.location.replace('index.html');
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 .active{
   background:rgba(255,255,255,0.2);
 }
-body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0.3s;}
-.sidebar{width:240px;background-color:#FF69B4;color:white;display:flex;flex-direction:column;padding:20px;position:fixed;top:0;left:0;height:100%;z-index:200;transition:0.3s;}
-.sidebar h2{text-align:center;margin-bottom:30px;font-size:1.6rem;}
+body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0.3s; font-family: 'Montserrat', sans-serif !important;}
+.sidebar{width:240px;background-color:#d38edb;color:white;display:flex;flex-direction:column;padding:20px;position:fixed;top:0;left:0;height:100%;z-index:200;transition:0.3s;}
+.sidebar h2{text-align:center;margin-bottom:-30px;font-size:1.6rem;}
 .sidebar a{color:white;padding:10px 15px;margin:5px 0;border-radius:8px;text-decoration:none;display:block;transition:0.3s;cursor:pointer;}
 .sidebar a:hover{background:rgba(255,255,255,0.2);}
 .submenu{display:none;margin-left:15px;overflow:hidden;transition:0.3s;}
@@ -19,7 +31,7 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
 .sidebar a.expand.active::after{content:'▴';}
 .main{flex:1;overflow-y:auto;padding:20px;margin-left:240px;transition:0.3s;}
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;position:relative;}
-.header h1{color:#FF69B4;}
+.header h3{color:#FF69B4;}
 .notifications{position:relative;cursor:pointer;font-size:1.3rem;}
 .notifications span{position:absolute;top:-8px;right:-8px;background:#FF69B4;color:white;font-size:0.7rem;padding:3px 6px;border-radius:50%;}
 #notifDropdown{display:none;position:absolute;right:0;top:30px;background:#fff;color:#1a202c;width:300px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:1000;max-height:400px;overflow-y:auto;}
@@ -29,20 +41,172 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
 .summary-card:hover{transform:translateY(-3px);}
 .summary-card h3{margin:5px 0;color:#FF69B4;}
 .summary-card p{margin:0;font-weight:bold;font-size:1.1rem;}
-.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center;}
-.controls input,.controls select,.controls button{padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:0.95rem;}
+.controls{width:100%; background-color:transparent; display:flex; justify-content:space-between; flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center;}
+.controls input,.controls select,.controls button{padding:10px 15px;border-radius:8px;border:1px solid #d1d5db;font-size:0.95rem;}
 .controls button{background:#FF69B4;color:white;border:none;cursor:pointer;transition:0.2s;}
 .controls button:hover{background:#FF00FF;}
-.booking-info{background:#fff;padding:15px 20px;border-radius:12px;margin-top:15px;display:flex;justify-content:space-between;align-items:center;transition:0.3s,box-shadow 0.3s;flex-wrap:wrap;opacity:0;transform:translateY(10px);}
+.booking-info{ width:31%; background:#fff;padding:15px 20px;border-radius:12px;margin-top:15px;display:flex;justify-content:space-between;align-items:center;transition:0.3s,box-shadow 0.3s;flex-wrap:wrap;opacity:0;transform:translateY(10px); box-shadow:0 8px 20px rgba(0,0,0,0.2);}
 .booking-info.show{opacity:1;transform:translateY(0);}
-.booking-info:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.1);}
+.booking-info:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(255, 0, 255, 0.1);}
+.booking-details{width: 100% !important;}
 .booking-details p{margin:3px 0;font-size:0.95rem;}
 .booking-actions select{padding:8px;border-radius:8px;border:1px solid #cbd5e1;}
-.badge{padding:3px 8px;border-radius:5px;color:white;font-size:0.8rem;font-weight:bold;}
-.badge.pending{background:#FFB6C1;}
-.badge.confirmed{background:#FF69B4;}
-.badge.completed{background:#FF10F0;}
-.badge.canceled{background:#ef4444;}
+.badge{padding:3px 8px;border-radius:5px;color:#fff;font-size:0.8rem;font-weight:bold;}
+.controls{
+  background-color: rgba(255, 255, 255, 0.1); 
+  min-height: 100px; 
+  display: flex; 
+  justify-content: space-around;
+  border-bottom: 4px solid #FF10F0;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+@media(max-width: 992px){
+  .badge{
+    padding:2px 6px;
+    border-radius:5px;
+    color:#fff;
+    font-size:0.rem;
+    font-weight:500;
+  }
+
+  .controls{
+    flex-direction: column;
+  }
+
+  .controls .runa{
+    width: 100%;
+    display: flex;
+    margin-bottom: 10px;
+    justify-content: space-between;
+  }
+
+  .controls .runo{
+    width: 70%;
+  }
+
+  .controls{
+    background-color: transparent; 
+    min-height: 100px; 
+    display: flex; 
+    justify-content: space-around;
+    border-bottom: 4px solid #FF10F0;
+    border-radius: 10px;
+    box-shadow: none !important;
+  }
+
+  .booking-info{ 
+    width:100%; 
+    background:#fff;
+  }
+
+  .booking-details{
+    width: 100% !important;
+  }
+}
+
+.service-list {
+  list-style-type: none;
+  /* margin: 4px 0 0 18px; */
+  color: #333;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.service-list li {
+  margin-bottom: 2px;
+  color: #970697;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center; align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #742e51;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.modal-content select {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.saveBtn, .cancelBtn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.saveBtn {
+  background: #742e51;
+  color: white;
+}
+
+.cancelBtn {
+  background: #ccc;
+}
+
+#bookingsList{
+  display: flex;
+  flex-wrap: wrap;
+  /* justify-content: space-between; */
+  row-gap: 30px;
+  column-gap: 25px;
+}
+
+@media(max-width: 992px){
+  #bookingsList{
+    row-gap: 15px;
+    column-gap: 0px;
+  }
+}
+
+
+.badge.pending{background:#f0d5d5;}
+.badge.confirmed{background:#99d7f2;}
+.badge.completed{background:#c391da;}
+.badge.canceled{background:#dc1f7d;}
 .selectBooking{margin-right:10px;}
 .hamburger{display:none;font-size:1.5rem;cursor:pointer;margin-right:10px;}
 .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);opacity:0;visibility:hidden;transition:0.3s;z-index:100;}
@@ -53,6 +217,8 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
 #pagination button.active{background:#FF00FF;}
 #pagination input{width:50px;padding:5px;border-radius:5px;border:1px solid #d1d5db;margin-left:5px;}
 @media(max-width:992px){.sidebar{left:-260px;}.sidebar.active{left:0;}.main{margin-left:0;}.hamburger{display:block;}}
+
+
 </style>
 </head>
 <body>
@@ -60,20 +226,23 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
 <div class="overlay" id="overlay"></div>
 
 <div class="sidebar" id="sidebar">
-  <h2>Lisa Spa</h2>
-  <a href="index.html">Dashboard</a>
-  <a href="allbookings.html"  class="active">Bookings</a>
-  <a href="customers.html">Customers</a>
-  <a href="services.html">Manage Services</a>
-  <a href="reviews.html">Customer Reviews</a>
-  <a href="#">Settings</a>
+  <h2><img src="lisawhite.png" alt="logo" width="auto" height="150px"/></h2>
+  <a href="dashboard.html"><i class="bi bi-bar-chart-line"></i> Dashboard</a>
+  <a href="allbookings.html" class="active"><i class="bi bi-bookmarks"></i> Bookings</a>
+  <a href="customers.html" ><i class="bi bi-people-fill"></i> Customers</a>
+  <a href="services.html"><i class="bi bi-briefcase"></i> Manage Services</a>
+  <a href="reviews.html"><i class="bi bi-star"></i> Customer Reviews</a>
+  <a href="discount.html"><i class="bi bi-gift"></i> Discounts</a>
+  <button class="logoutBtn" id="logoutBtn" style="background:#854385;color:#fff;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;">
+    <i class="bi bi-arrow-left-short"></i>Logout
+  </button>
 </div>
 
 <div class="main">
   <div class="header">
       <div style="display:flex;align-items:center;">
       <span class="hamburger" id="hamburger">☰</span>
-      <h1>All Bookings</h1>
+      <h3> <i class="bi bi-bookmarks"></i> All Bookings</h3>
       </div>
       <div class="notifications" id="notifBell">
       🔔 <span id="notifCount">0</span>
@@ -85,16 +254,22 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
   </div>
 
   <div class="controls">
-      <label><input type="checkbox" id="selectAll"> Select All</label>
-      <select id="bulkAction">
-          <option value="">Bulk Action</option>
-          <option value="pending">Mark as Pending</option>
-          <option value="confirmed">Mark as Confirmed</option>
-          <option value="completed">Mark as Completed</option>
-          <option value="canceled">Mark as Canceled</option>
-      </select>
+    <div class="runa" style="display: flex;">
+      <div>
+        <label><input type="checkbox" id="selectAll" style="width:20px; height: 20px;"> Select All</label>
+        <select id="bulkAction">
+            <option value="">Bulk Action</option>
+            <option value="pending">Mark as Pending</option>
+            <option value="confirmed">Mark as Confirmed</option>
+            <option value="completed">Mark as Completed</option>
+            <option value="canceled">Mark as Canceled</option>
+        </select>
+      </div>
       <button id="applyBulk">Apply</button>
-      <input type="text" id="searchInput" placeholder="Search by name, email, or ID">
+    </div>
+
+    <div class="runa">
+      <input class="runo" type="text" id="searchInput" placeholder="Search by name, email, or ID">
       <select id="statusFilter">
           <option value="">All Status</option>
           <option value="pending">Pending</option>
@@ -102,20 +277,50 @@ body{display:flex;min-height:100vh;background:#eef2f7;color:#1a202c;transition:0
           <option value="completed">Completed</option>
           <option value="canceled">Canceled</option>
       </select>
+    </div>
+
+    <div class="runa">
       <input type="date" id="dateFilter">
+      <button id="clearDate">Clear Date</button>
       <select id="sortOrder">
           <option value="asc">Sort by Date ↑</option>
           <option value="desc">Sort by Date ↓</option>
       </select>
+    </div>
+      
   </div>
 
   <div id="bookingsList"></div>
   <div id="pagination"></div>
+
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>Reschedule Booking</h3>
+    <form id="editBookingForm">
+      <input type="hidden" id="editBookingId">
+
+      <label for="editDate">New Date:</label>
+      <input type="text" id="editDate" placeholder="Select date" required>
+
+      <label for="editTime">New Time:</label>
+      <select id="editTime"></select>
+
+      <div class="modal-actions">
+        <button type="submit" class="saveBtn">Save Changes</button>
+        <button type="button" class="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
+
+</div>
+
+
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
@@ -133,6 +338,7 @@ const searchInput = document.getElementById('searchInput');
 const statusFilter = document.getElementById('statusFilter');
 const sortOrder = document.getElementById('sortOrder');
 const dateFilter = document.getElementById('dateFilter');
+const clearDateBtn = document.getElementById('clearDate');
 const notifCountEl = document.getElementById('notifCount');
 const notifBell = document.getElementById('notifBell');
 const notifDropdown = document.getElementById('notifDropdown');
@@ -168,112 +374,275 @@ function updateSummary(){
   notifCountEl.textContent = newCount>0 ? newCount:0;
 }
 
-// Render Bookings with Pagination
-function renderBookings(){
+
+// --- Render Bookings with Pagination ---
+let filterDateInitialized = false; // track if user has selected a date
+
+function renderBookings() {
   const searchText = searchInput.value.toLowerCase();
   const filterStatus = statusFilter.value;
-  const filterDate = dateFilter.value;
+  const filterDate = dateFilter.value; // empty = no filter
   const sortDir = sortOrder.value;
+
   bookingsList.innerHTML = '';
 
-  let filteredBookings = allBookings.filter(({data})=>{
-    const { customerName,email,status,date } = data;
-    if(searchText && !`${customerName} ${email}`.toLowerCase().includes(searchText)) return false;
-    if(filterStatus && status!==filterStatus) return false;
-    if(filterDate && date!==filterDate) return false;
+  // --- Filter bookings ---
+  const filteredBookings = allBookings.filter(({ data }) => {
+    const { customerName, email, status, date } = data;
+
+    if (searchText && !`${customerName} ${email}`.toLowerCase().includes(searchText)) return false;
+    if (filterStatus && status !== filterStatus) return false;
+    if (filterDate && date !== filterDate) return false;
+
     return true;
   });
 
-  filteredBookings.sort((a,b)=>{
+  // --- Sort bookings ---
+  filteredBookings.sort((a, b) => {
     const dateA = new Date(`${a.data.date}T${a.data.time}`);
     const dateB = new Date(`${b.data.date}T${b.data.time}`);
-    return sortDir==='asc'? dateA-dateB : dateB-dateA;
+    return sortDir === 'asc' ? dateA - dateB : dateB - dateA;
   });
 
-  const totalPages = Math.ceil(filteredBookings.length/rowsPerPage);
-  if(currentPage>totalPages) currentPage = totalPages||1;
-  const start = (currentPage-1)*rowsPerPage;
-  const end = start+rowsPerPage;
-  const pageItems = filteredBookings.slice(start,end);
+  // --- Pagination calculations ---
+  const totalPages = Math.ceil(filteredBookings.length / rowsPerPage) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
 
-  pageItems.forEach(({id,data},index)=>{
-    const {customerName,service,date,time,status} = data;
-    const div=document.createElement('div');
-    div.className='booking-info';
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageItems = filteredBookings.slice(start, end);
 
-    // Highlight today
-    const today = new Date().toISOString().split('T')[0];
-    if(date === today){
-        div.style.backgroundColor = '#FFF0F5'; // Light pink
+  // --- Render bookings ---
+  pageItems.forEach(({ id, data }, index) => {
+    const { customerName, services, date, status, amount, time, mode, address, phone } = data;
+
+    let servicesHTML = "<em>N/A</em>";
+    if(Array.isArray(services) && services.length > 0){
+      servicesHTML = `<ul class="service-list">${services.map(s => `<li>${s.name}</li>`).join('')}</ul>`;
     }
 
-    div.innerHTML=`
+    const formattedAmount = `₦${(amount / 100 || 0 / 100).toLocaleString()}`;
+    const serviceMode = mode === "inSpa" ? `<b>In-Spa</b>` : `<b>Home Service</b>`;
+    const serviceAddress = address ? `<small>Address: <b>${address}</b></small>` : '';
+    const safeStatus = status || 'pending';
+
+    const div = document.createElement('div');
+    div.className = 'booking-info';
+    div.innerHTML = `
       <div class="booking-details">
-        <input type="checkbox" class="selectBooking" data-id="${id}">
-        <strong>${customerName}</strong> - ${service}<br>
-        <small>${date} at ${time} | Status: <span class="badge ${status}">${status.toUpperCase()}</span></small>
-      </div>
-      <div class="booking-actions">
-        <select class="statusSelect" data-id="${id}">
-          <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
-          <option value="confirmed" ${status==='confirmed'?'selected':''}>Confirmed</option>
-          <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
-          <option value="canceled" ${status==='canceled'?'selected':''}>Canceled</option>
-        </select>
+        <div style="display:flex; align-items:center;">
+          <input type="checkbox" class="selectBooking" data-id="${id}" style="width:20px; height:20px; border:2px solid #DA70D6;">
+          <span style="color:#DA70D6; margin-left:5px;">Select Booking</span>
+        </div>
+        <br>
+        <div>
+          <strong>${customerName}</strong><br>
+          ${servicesHTML}
+          <small>Phone: ${phone}</small><br>
+          <small>Amount: <b style="color:#FF00FF">${formattedAmount}</b></small><br>
+          <small>Mode: ${serviceMode}</small><br>
+          ${serviceAddress}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+          <small>${date} at ${time}</small>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="editBooking" data-id="${id}" data-date="${date}" data-time="${time}" style="background:#eee;border:none;border-radius:5px;padding:2px 8px;cursor:pointer;">✏️ Edit</button>
+            <span class="badge ${safeStatus}">${safeStatus.toUpperCase()}</span>
+          </div>
+        </div>
       </div>
     `;
     bookingsList.appendChild(div);
-    setTimeout(()=>{div.classList.add('show');}, index*50);
+    setTimeout(() => div.classList.add('show'), index * 50);
   });
 
-  // Pagination
-  paginationContainer.innerHTML='';
-  const maxVisiblePages = 5;
-  let startPage = Math.max(currentPage - Math.floor(maxVisiblePages/2),1);
-  let endPage = startPage + maxVisiblePages -1;
-  if(endPage>totalPages){ endPage=totalPages; startPage=Math.max(endPage-maxVisiblePages+1,1); }
+  renderPagination(totalPages);
+}
 
+// --- Pagination Renderer ---
+function renderPagination(totalPages) {
+  paginationContainer.innerHTML = '';
+
+  // Prev button
   const prevBtn = document.createElement('button');
-  prevBtn.textContent='Prev';
-  prevBtn.disabled=currentPage===1;
-  prevBtn.addEventListener('click', ()=>{ if(currentPage>1){currentPage--; renderBookings();} });
+  prevBtn.textContent = 'Prev';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener('click', () => { currentPage--; renderBookings(); });
   paginationContainer.appendChild(prevBtn);
 
-  for(let i=startPage;i<=endPage;i++){
-    const btn=document.createElement('button');
-    btn.textContent=i;
-    if(i===currentPage) btn.classList.add('active');
-    btn.addEventListener('click', ()=>{ currentPage=i; renderBookings(); });
+  // Page buttons
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    if (i === currentPage) btn.classList.add('active');
+    btn.addEventListener('click', () => { currentPage = i; renderBookings(); });
     paginationContainer.appendChild(btn);
   }
 
+  // Next button
   const nextBtn = document.createElement('button');
-  nextBtn.textContent='Next';
-  nextBtn.disabled=currentPage===totalPages||totalPages===0;
-  nextBtn.addEventListener('click', ()=>{ if(currentPage<totalPages){currentPage++; renderBookings();} });
+  nextBtn.textContent = 'Next';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener('click', () => { currentPage++; renderBookings(); });
   paginationContainer.appendChild(nextBtn);
 
+  // Page jump input
   const pageInput = document.createElement('input');
-  pageInput.type='number';
-  pageInput.min=1;
-  pageInput.max=totalPages;
-  pageInput.value=currentPage;
-  pageInput.addEventListener('change', ()=>{
-    let val=parseInt(pageInput.value);
-    if(val>=1&&val<=totalPages){currentPage=val; renderBookings();}
+  pageInput.type = 'number';
+  pageInput.min = 1;
+  pageInput.max = totalPages;
+  pageInput.value = currentPage;
+  pageInput.style.marginLeft = '5px';
+  pageInput.addEventListener('change', () => {
+    let val = parseInt(pageInput.value);
+    if (val >= 1 && val <= totalPages) {
+      currentPage = val;
+      renderBookings();
+    } else {
+      pageInput.value = currentPage;
+    }
   });
   paginationContainer.appendChild(pageInput);
+}
 
-  // Individual status change
-  bookingsList.querySelectorAll('.statusSelect').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const id=sel.dataset.id;
-      const newStatus=sel.value;
-      await updateDoc(doc(db,'bookings',id),{status:newStatus});
-      updateSummary();
-    });
+// --- Initialize Flatpickr for date only ---
+let flatpickrDate;
+function initFlatpickr() {
+  flatpickrDate = flatpickr("#editDate", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    disable: [], // dynamically updated
+    onChange: async (selectedDates, dateStr) => {
+      const currentTime = document.getElementById('editTime').value;
+      await populateAvailableTimes(dateStr, currentTime);
+    }
   });
 }
+
+initFlatpickr();
+
+// --- Fetch fully booked dates from Firestore ---
+async function fetchFullyBookedDates() {
+  const snapshot = await getDocs(collection(db, 'bookings'));
+  const bookings = snapshot.docs.map(doc => doc.data());
+
+  const dateCounts = {};
+  bookings.forEach(b => {
+    if (b.date) dateCounts[b.date] = (dateCounts[b.date] || 0) + 1;
+  });
+
+  // Max slots per day (8:00-22:00, 2-hour gap => 8 slots/day)
+  const maxSlots = 6;
+  const fullyBookedDates = Object.keys(dateCounts).filter(date => dateCounts[date] >= maxSlots);
+
+  return fullyBookedDates;
+}
+
+// --- Populate available times for a selected date with 2-hour buffer ---
+async function populateAvailableTimes(selectedDate, currentTime) {
+  const editTimeEl = document.getElementById('editTime');
+  editTimeEl.innerHTML = ''; // clear previous options
+
+  const snapshot = await getDocs(collection(db, 'bookings'));
+  const bookedTimes = snapshot.docs
+    .map(doc => doc.data())
+    .filter(b => b.date === selectedDate)
+    .map(b => b.time);
+
+  const slots = [];
+  for (let h = 8; h <= 20; h += 2) { // 2-hour interval
+    slots.push(`${h.toString().padStart(2, '0')}:00`);
+  }
+
+  // Filter out slots that fall within 2 hours of any booked slot
+  const availableSlots = slots.filter(slot => {
+    const slotHour = parseInt(slot.split(':')[0]);
+    for (let booked of bookedTimes) {
+      const bookedHour = parseInt(booked.split(':')[0]);
+      if (slotHour >= bookedHour && slotHour < bookedHour + 2) {
+        if (slot === currentTime) return true; // allow editing current booking
+        return false; // blocked
+      }
+    }
+    return true;
+  });
+
+  if (availableSlots.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No available times';
+    opt.disabled = true;
+    editTimeEl.appendChild(opt);
+  } else {
+    availableSlots.forEach(slot => {
+      const opt = document.createElement('option');
+      opt.value = slot;
+      opt.textContent = slot;
+      if (slot === currentTime) opt.selected = true;
+      editTimeEl.appendChild(opt);
+    });
+  }
+}
+
+// --- Update disabled dates dynamically ---
+async function updateDisabledDates() {
+  const fullyBookedDates = await fetchFullyBookedDates();
+  flatpickrDate.set('disable', fullyBookedDates);
+}
+
+// Initial load
+updateDisabledDates();
+
+// Real-time updates
+onSnapshot(collection(db,'bookings'), snapshot => {
+  updateDisabledDates();
+});
+
+// --- Open modal ---
+document.addEventListener('click', async e => {
+  if (e.target.classList.contains('editBooking')) {
+    const bookingId = e.target.dataset.id;
+    const date = e.target.dataset.date;
+    const time = e.target.dataset.time;
+
+    document.getElementById('editBookingId').value = bookingId;
+
+    flatpickrDate.setDate(date, true); // set initial date
+    await populateAvailableTimes(date, time); // populate times
+
+    document.getElementById('editModal').style.display = 'flex';
+  }
+});
+
+// --- Cancel modal ---
+document.querySelector('.cancelBtn').addEventListener('click', () => {
+  document.getElementById('editModal').style.display = 'none';
+});
+
+// --- Submit updated booking ---
+document.getElementById('editBookingForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const bookingId = document.getElementById('editBookingId').value;
+  const newDate = document.getElementById('editDate').value;
+  const newTime = document.getElementById('editTime').value;
+
+  if (!newTime) {
+    alert('Please select an available time ❌');
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, 'bookings', bookingId), { date: newDate, time: newTime });
+    alert('Booking rescheduled successfully ✅');
+    document.getElementById('editModal').style.display = 'none';
+  } catch(err) {
+    console.error(err);
+    alert('Failed to reschedule ❌');
+  }
+});
+
+
+
 
 // Firestore real-time
 onSnapshot(collection(db,'bookings'), snapshot=>{
@@ -287,6 +656,13 @@ searchInput.addEventListener('input', ()=>{ currentPage=1; renderBookings(); });
 statusFilter.addEventListener('change', ()=>{ currentPage=1; renderBookings(); });
 sortOrder.addEventListener('change', ()=>{ currentPage=1; renderBookings(); });
 dateFilter.addEventListener('change', ()=>{ currentPage=1; renderBookings(); });
+
+// ✅ Clear date filter to show all bookings again
+clearDateBtn.addEventListener('click', ()=>{
+  dateFilter.value = '';
+  currentPage = 1;
+  renderBookings();
+});
 
 // Bulk Actions
 selectAllCheckbox.addEventListener('change', ()=>{
@@ -310,6 +686,20 @@ notifBell.addEventListener('click', ()=>{
   notifDropdown.style.display = notifDropdown.style.display==='block'?'none':'block';
   lastSeenBookingCount = allBookings.length;
   updateSummary();
+});
+
+// ✅ Auto-fill calendar with today's date on load
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  dateFilter.value = today;
+});
+
+logoutBtn.addEventListener('click', () => {
+  // Clear sessionStorage
+  sessionStorage.removeItem('adminUser');
+
+  // Redirect to login page
+  window.location.replace('index.html');
 });
 </script>
 </body>
