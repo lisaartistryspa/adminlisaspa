@@ -201,10 +201,12 @@ function renderCustomers(){
   const searchText = searchInput.value.toLowerCase();
 
   let filtered = allCustomers.filter(c => 
-    c.name.toLowerCase().includes(searchText) || 
-    c.email.toLowerCase().includes(searchText) ||
-    c.phone.toLowerCase().includes(searchText)
-  );
+   c.name.toLowerCase().includes(searchText) || 
+   c.email.toLowerCase().includes(searchText) ||
+   c.phone.toLowerCase().includes(searchText)
+ );
+
+
 
   if(frequentToggle.checked){
     filtered = filtered.filter(c => c.bookings > 5);
@@ -266,9 +268,17 @@ onSnapshot(collection(db,'bookings'), snapshot => {
     const email = data.email;
 
     if(!customersMap[email]){
+      // customersMap[email] = { 
+      //   name: data.customerName, email: email, phone: data.phone || '—', bookings: 0, totalPaid: 0 
+      // };
       customersMap[email] = { 
-        name: data.customerName, email: email, phone: data.phone || '—', bookings: 0, totalPaid: 0 
+        name: data.customerName || "Unknown", 
+        email: email || "No Email", 
+        phone: data.phone || "No Phone", 
+        bookings: 0, 
+        totalPaid: 0 
       };
+
     }
 
     customersMap[email].bookings++;

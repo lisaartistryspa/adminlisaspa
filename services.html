@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Dashboard – NextEdge Spa</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Services - Lisa Artistry Spa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
 <script>
   const admin = sessionStorage.getItem('adminUser');
 
@@ -57,19 +56,34 @@ form button:hover { background: #FF00FF; }
 #formStatus { margin-top: 8px; font-weight: bold; text-align: center; }
 
 /* TABLE */
-.table-container { background: #fff; padding: 15px; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.table-container { background: #fff; padding: 15px; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; }
 table { width: 100%; border-collapse: collapse; min-width: 600px; }
 th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-th { background: #FF69B4; color: white; white-space: nowrap; }
+th { background:transparent; color: white; white-space: nowrap; }
 tr:hover { background: #e6f0ff; }
 .action-btn { padding: 6px 10px; margin: 0 2px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85rem; }
 .edit { background: #f7f0f3; color: white; }
 .delete { background: #eccadb; color: white; }
 
+/* BADGES */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.85rem; color: white; font-weight: lighter !important; }
+.badge.inSpa { background: #854385; }
+.badge.homeService { background: #FF69B4; }
+.badge.Massage { background: #FF00FF; }
+.badge.Body\ Scrubs { background: #ef4444; }
+.badge.Facials { background: #8b5cf6; }
+.badge.Pedicure { background: #14b8a6; }
+.badge.Waxing { background: #f43f5e; }
+.badge.Lash\ Extension { background: #22d3ee; }
+
+
 /* PAGINATION */
 #pagination { margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
 #pagination button { padding: 6px 12px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
 #pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* HIGHLIGHT SEARCH TEXT */
+.highlight { background-color: yellow; color: black; }
 
 /* RESPONSIVE DESIGN */
 @media (max-width: 992px) {
@@ -88,13 +102,13 @@ tr:hover { background: #e6f0ff; }
 <div class="sidebar" id="sidebar">
   <h2><img src="lisawhite.png" alt="logo" width="auto" height="150px"/></h2>
   <a href="dashboard.html"><i class="bi bi-bar-chart-line"></i> Dashboard</a>
-  <a href="allbookings.html" ><i class="bi bi-bookmarks"></i> Bookings</a>
-  <a href="customers.html" ><i class="bi bi-people-fill"></i> Customers</a>
+  <a href="allbookings.html"><i class="bi bi-bookmarks"></i> Bookings</a>
+  <a href="customers.html"><i class="bi bi-people-fill"></i> Customers</a>
   <a href="services.html" class="active"><i class="bi bi-briefcase"></i> Manage Services</a>
   <a href="reviews.html"><i class="bi bi-star"></i> Customer Reviews</a>
   <a href="discount.html"><i class="bi bi-gift"></i> Discounts</a>
   <button class="logoutBtn" id="logoutBtn" style="background:#854385;color:#fff;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;">
-    <i class="bi bi-arrow-left-short"></i>Logout
+    <i class="bi bi-arrow-left-short"></i> Logout
   </button>
 </div>
 
@@ -121,9 +135,9 @@ tr:hover { background: #e6f0ff; }
       <option value="Massage">Massage</option>
       <option value="Body Scrubs">Body Scrubs</option>
       <option value="Facials">Facials</option>
-      <option value="Nails">Pedicure</option>
-      <option value="Nails">Waxing</option>
-      <option value="Nails">Lash Extension</option>
+      <option value="Pedicure">Pedicure</option>
+      <option value="Waxing">Waxing</option>
+      <option value="Lash Extension">Lash Extension</option>
     </select>
 
     <label>Service Name</label>
@@ -135,18 +149,44 @@ tr:hover { background: #e6f0ff; }
     <p id="formStatus"></p>
   </form>
 
-  <label for="modeFilter">Filter by Mode:</label>
-  <select id="modeFilter">
-    <option value="all">All</option>
-    <option value="inSpa">In Spa</option>
-    <option value="homeService">Home Service</option>
-  </select>
+  <!-- FILTERS -->
+  <div style="display:flex;flex-wrap:wrap;gap:15px;margin:20px 0;align-items:center">
+    <input type="text" id="searchInput" placeholder="Search by name, type, mode, price..." style="flex:1;padding:12px;border-radius:8px;border:1px solid #cbd5e0;" />
+    <select id="modeFilter" style="padding:12px;border-radius:8px;border:1px solid #cbd5e0;">
+      <option value="all">All Modes</option>
+      <option value="inSpa">In Spa</option>
+      <option value="homeService">Home Service</option>
+    </select>
+    <select id="typeFilter" style="padding:12px;border-radius:8px;border:1px solid #cbd5e0;">
+      <option value="all">All Types</option>
+      <option value="Massage">Massage</option>
+      <option value="Body Scrubs">Body Scrubs</option>
+      <option value="Facials">Facials</option>
+      <option value="Pedicure">Pedicure</option>
+      <option value="Waxing">Waxing</option>
+      <option value="Lash Extension">Lash Extension</option>
+    </select>
+    <select id="sortFilter" style="padding:12px;border-radius:8px;border:1px solid #cbd5e0;">
+      <option value="default">Sort</option>
+      <option value="nameAsc">Name A–Z</option>
+      <option value="nameDesc">Name Z–A</option>
+      <option value="priceAsc">Price Low → High</option>
+      <option value="priceDesc">Price High → Low</option>
+    </select>
+    <button id="clearFilters" style="padding:12px 20px;background:#854385;color:#fff;border:none;border-radius:8px;cursor:pointer;">Clear</button>
+  </div>
+
+  <!-- EXPORT BUTTONS -->
+  <div style="margin:10px 0; display:flex; gap:10px;">
+    <button id="exportExcel" style="padding:10px 15px; background:#DA70D6; color:#fff; border:none; border-radius:6px; cursor:pointer;">Export Excel</button>
+    <button id="exportPDF" style="padding:10px 15px; background:#AA336A; color:#fff; border:none; border-radius:6px; cursor:pointer;">Export PDF</button>
+  </div>
 
   <!-- TABLE -->
-  <div class="table-container">
+   <div class="table-container">
     <table id="servicesTable">
       <thead>
-        <tr>
+        <tr style="background:linear-gradient(to right, #ec54a0, #f368ad, #f0b4d2); font-weight: 500;">
           <th>Mode</th>
           <th>Type</th>
           <th>Service</th>
@@ -164,14 +204,20 @@ tr:hover { background: #e6f0ff; }
     <span id="pageInfo">Page 1</span>
     <button id="nextPage">Next</button>
   </div>
-
 </div>
 
 <!-- JS SCRIPT -->
+<!-- ADD THESE CDN LINKS IN <head> -->
+<!-- <script type="module" src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> -->
+<!-- XLSX -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
   authDomain: "lisaartistryspa-761ac.firebaseapp.com",
@@ -184,56 +230,93 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// DOM ELEMENTS
 const serviceForm = document.getElementById('serviceForm');
 const servicesTable = document.querySelector('#servicesTable tbody');
 const formStatus = document.getElementById('formStatus');
 const modeFilter = document.getElementById('modeFilter');
-
-const menuBtn = document.getElementById('menuBtn');
-const sidebar = document.getElementById('sidebar');
-menuBtn.addEventListener('click', () => { sidebar.classList.toggle('active'); document.body.classList.toggle('sidebar-open'); });
-document.querySelectorAll('.sidebar a').forEach(link => {
-  link.addEventListener('click', () => {
-    if (window.innerWidth <= 992) { sidebar.classList.remove('active'); document.body.classList.remove('sidebar-open'); }
-  });
-});
-
-// PAGINATION SETUP
-const pageSize = 5;
-let currentPage = 1;
-let servicesData = [];
-
+const searchInput = document.getElementById("searchInput");
+const typeFilter = document.getElementById("typeFilter");
+const sortFilter = document.getElementById("sortFilter");
+const logoutBtn = document.getElementById("logoutBtn");
 const prevPageBtn = document.getElementById('prevPage');
 const nextPageBtn = document.getElementById('nextPage');
 const pageInfo = document.getElementById('pageInfo');
 
-function renderServices(snapshot) {
-  const filter = modeFilter.value;
-  servicesData = snapshot.docs
-    .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
-    .filter(s => filter === 'all' || s.mode === filter);
+// SIDEBAR TOGGLE
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+  document.body.classList.toggle('sidebar-open');
+});
 
-  const totalPages = Math.ceil(servicesData.length / pageSize);
+// PAGINATION & DATA
+const pageSize = 5;
+let currentPage = 1;
+let servicesData = [];
+
+// HIGHLIGHT SEARCH TEXT
+function highlightText(text, search) {
+  if (!search) return text;
+  const regex = new RegExp(`(${search})`, 'gi');
+  return text.replace(regex, `<mark style="background:#FFFB91;color:#000;">$1</mark>`);
+}
+
+// RENDER SERVICES
+function renderServices(data) {
+  const modeValue = modeFilter.value;
+  const typeValue = typeFilter.value;
+  const searchValue = searchInput.value.trim().toLowerCase();
+  const sortValue = sortFilter.value;
+
+  // FILTER
+  let filtered = data.filter(s => {
+    const modeMatch = (modeValue === "all" || s.mode === modeValue);
+    const typeMatch = (typeValue === "all" || s.type === typeValue);
+    const searchMatch =
+      s.name.toLowerCase().includes(searchValue) ||
+      s.type.toLowerCase().includes(searchValue) ||
+      s.mode.toLowerCase().includes(searchValue) ||
+      (s.amount / 100).toString().includes(searchValue);
+    return modeMatch && typeMatch && searchMatch;
+  });
+
+  // SORT
+  filtered.sort((a, b) => {
+    if (sortValue === "nameAsc") return a.name.localeCompare(b.name);
+    if (sortValue === "nameDesc") return b.name.localeCompare(a.name);
+    if (sortValue === "priceAsc") return a.amount - b.amount;
+    if (sortValue === "priceDesc") return b.amount - a.amount;
+    return 0;
+  });
+
+  // PAGINATION
+  const totalPages = Math.ceil(filtered.length / pageSize);
   if (currentPage > totalPages) currentPage = totalPages || 1;
-
   const start = (currentPage - 1) * pageSize;
-  const end = start + pageSize;
-  const pageData = servicesData.slice(start, end);
+  const pageList = filtered.slice(start, start + pageSize);
 
-  servicesTable.innerHTML = '';
-  pageData.forEach(s => {
-    const tr = document.createElement('tr');
+  // CLEAR TABLE
+  servicesTable.innerHTML = "";
+
+  // RENDER ROWS
+  pageList.forEach(s => {
+    const tr = document.createElement("tr");
+    tr.style.opacity = 0;
+    tr.style.transition = "opacity 0.3s ease, transform 0.3s ease";
     tr.innerHTML = `
-      <td>${s.mode === "inSpa" ? "In Spa" : "Home Service"}</td>
-      <td>${s.type}</td>
-      <td>${s.name}</td>
-      <td>₦${(s.amount/100).toLocaleString()}</td>
+      <td><span style="padding:4px 8px;border-radius:4px;background:${s.mode==='inSpa'?'#854385':'#FF69B4'};color:white;font-weight:500;">${s.mode==='inSpa'?'In Spa':'Home Service'}</span></td>
+      <td><span style="padding:4px 8px;border-radius:4px;background:transparent;color:#FF10F0;font-weight:400;">${s.type}</span></td>
+      <td>${highlightText(s.name, searchValue)}</td>
+      <td>₦${(s.amount / 100).toLocaleString()}</td>
       <td>
         <button class="action-btn edit" data-id="${s.id}"><i class="bi bi-pencil" style="color: teal;"></i></button>
-        <button class="action-btn delete" data-id="${s.id}"><i class="bi bi-trash" style="color: #ef4444"></i></button>
+        <button class="action-btn delete" data-id="${s.id}"><i class="bi bi-trash" style="color: #ef4444;"></i></button>
       </td>
     `;
     servicesTable.appendChild(tr);
+    requestAnimationFrame(() => { tr.style.opacity = 1; tr.style.transform = "translateY(0)"; });
   });
 
   pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
@@ -242,59 +325,84 @@ function renderServices(snapshot) {
 }
 
 // PAGINATION BUTTONS
-prevPageBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderServices({ docs: servicesData.map(s => ({ id: s.id, data: () => s })) }); } });
-nextPageBtn.addEventListener('click', () => { const totalPages = Math.ceil(servicesData.length / pageSize); if (currentPage < totalPages) { currentPage++; renderServices({ docs: servicesData.map(s => ({ id: s.id, data: () => s })) }); } });
+prevPageBtn.addEventListener('click', () => { if(currentPage>1){currentPage--; renderServices(servicesData);} });
+nextPageBtn.addEventListener('click', () => { const totalPages = Math.ceil(servicesData.length/pageSize); if(currentPage<totalPages){currentPage++; renderServices(servicesData);} });
 
-// REAL-TIME DATA
-onSnapshot(collection(db, "services"), snapshot => { renderServices(snapshot); });
-modeFilter.addEventListener('change', () => { currentPage = 1; renderServices({ docs: servicesData.map(s => ({ id: s.id, data: () => s })) }); });
+// FIRESTORE LISTENER
+onSnapshot(collection(db, "services"), snapshot => {
+  servicesData = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+  renderServices(servicesData);
+});
+
+// FILTERS
+[modeFilter, typeFilter, sortFilter, searchInput].forEach(el => {
+  el.addEventListener('change', () => { currentPage=1; renderServices(servicesData); });
+  el.addEventListener('input', () => { currentPage=1; renderServices(servicesData); });
+});
+document.getElementById("clearFilters").addEventListener("click", () => {
+  searchInput.value = ""; modeFilter.value="all"; typeFilter.value="all"; sortFilter.value="default"; currentPage=1;
+  renderServices(servicesData);
+});
 
 // ADD / UPDATE SERVICE
-serviceForm.addEventListener('submit', async (e) => {
+serviceForm.addEventListener('submit', async e => {
   e.preventDefault();
   const id = document.getElementById('serviceId').value;
   const name = document.getElementById('serviceName').value.trim();
   const type = document.getElementById('serviceType').value;
   const mode = document.getElementById('serviceMode').value;
   const amount = Number(document.getElementById('servicePrice').value) * 100;
-
-  if (!name || !type || !mode || !amount) { formStatus.textContent = "Please fill all fields."; formStatus.style.color = "red"; return; }
-
-  try {
-    if (id) { await updateDoc(doc(db, "services", id), { name, type, mode, amount }); formStatus.textContent = "Service updated successfully!"; }
-    else { await addDoc(collection(db, "services"), { name, type, mode, amount }); formStatus.textContent = "Service added successfully!"; }
-    formStatus.style.color = "green"; serviceForm.reset(); document.getElementById('serviceId').value = "";
-  } catch (err) { console.error(err); formStatus.textContent = "Error saving service."; formStatus.style.color = "red"; }
+  if(!name||!type||!mode||!amount){ formStatus.textContent="Please fill all fields."; formStatus.style.color="red"; return; }
+  try{
+    if(id){ await updateDoc(doc(db,"services",id),{name,type,mode,amount}); formStatus.textContent="Service updated successfully!"; }
+    else{ await addDoc(collection(db,"services"),{name,type,mode,amount}); formStatus.textContent="Service added successfully!"; }
+    formStatus.style.color="green"; serviceForm.reset(); document.getElementById('serviceId').value="";
+  }catch(err){ console.error(err); formStatus.textContent="Error saving service."; formStatus.style.color="red"; }
 });
 
-// EDIT / DELETE
-servicesTable.addEventListener('click', (e) => {
-  const row = e.target.closest('tr');
-  const cells = row ? row.children : null;
-
-  if (e.target.closest('.edit')) {
-    document.getElementById('serviceId').value = e.target.dataset.id;
-    document.getElementById('serviceName').value = cells[0].textContent;
-    document.getElementById('serviceType').value = cells[1].textContent;
-    document.getElementById('serviceMode').value = cells[2].textContent === "In Spa" ? "inSpa" : "homeService";
-    document.getElementById('servicePrice').value = parseInt(cells[3].textContent.replace(/[₦,]/g, ''), 10);
-    formStatus.textContent = "Editing service..."; formStatus.style.color = "#FF69B4";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+// EDIT & DELETE
+servicesTable.addEventListener('click', e => {
+  const editBtn = e.target.closest('.edit');
+  if(editBtn){
+    const id = editBtn.dataset.id;
+    const row = editBtn.closest("tr").children;
+    document.getElementById('serviceId').value = id;
+    document.getElementById('serviceMode').value = row[0].textContent.includes("In Spa")?"inSpa":"homeService";
+    document.getElementById('serviceType').value = row[1].textContent;
+    document.getElementById('serviceName').value = row[2].textContent;
+    document.getElementById('servicePrice').value = parseInt(row[3].textContent.replace(/[₦,]/g,''),10);
+    formStatus.textContent = "Editing service..."; formStatus.style.color="#FF69B4"; window.scrollTo({top:0,behavior:'smooth'}); return;
   }
-
-  if (e.target.closest('.delete')) {
-    const id = e.target.dataset.id;
-    if (confirm("Are you sure you want to delete this service?")) deleteDoc(doc(db, "services", id));
+  const deleteBtn = e.target.closest('.delete');
+  if(deleteBtn && confirm("Are you sure you want to delete this service?")){
+    deleteDoc(doc(db,"services",deleteBtn.dataset.id)).catch(err=>console.error(err));
   }
 });
 
-logoutBtn.addEventListener('click', () => {
-  // Clear sessionStorage
-  sessionStorage.removeItem('adminUser');
+// LOGOUT
+logoutBtn.addEventListener('click',()=>{ sessionStorage.removeItem('adminUser'); window.location.replace('index.html'); });
 
-  // Redirect to login page
-  window.location.replace('index.html');
+// EXPORT PDF
+document.getElementById('exportPDF')?.addEventListener('click',()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y=10;
+  servicesData.forEach(s => {
+    doc.text(`${s.name} | ${s.type} | ${s.mode} | ₦${(s.amount/100).toLocaleString()}`,10,y); y+=10;
+  });
+  doc.save("services.pdf");
+});
+
+// EXPORT EXCEL
+document.getElementById('exportExcel')?.addEventListener('click',()=>{
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(servicesData.map(s=>({Mode:s.mode,Type:s.type,Service:s.name,Price:s.amount/100})));
+  XLSX.utils.book_append_sheet(wb,ws,"Services");
+  XLSX.writeFile(wb,"services.xlsx");
 });
 </script>
+
+
+
 </body>
 </html>
