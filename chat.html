@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard – Lisa Spa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="lisa.png" sizes="any">
+<link rel="icon" type="svg+xml" href="lisa.png">
+<link rel="apple-touch-icon" href="lisa.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<script>
+  const admin = sessionStorage.getItem('adminUser');
+
+  if (!admin) {
+    // If not logged in, redirect immediately
+    window.location.replace('index.html');
+  }
+</script>
+
+<script>
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+</script>
+<style>
+/* RESET & BASE STYLES */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { display: flex; min-height: 100vh; background: #f6f9fc; color: #1a202c; overflow-x: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; background-color: #d38edb; color: white;
+  display: flex; flex-direction: column; padding: 20px;
+  position: fixed; top: 0; left: 0; height: 100%;
+  z-index: 200; transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+.sidebar h2 { text-align: center; margin-bottom: -30px; font-size: 1.5rem; }
+.sidebar a { color: white; padding: 10px 15px; margin: 5px 0; border-radius: 8px; text-decoration: none; display: block; transition: 0.3s; }
+.sidebar a:hover { background: rgba(255,255,255,0.2); }
+.sidebar a.active { background: rgba(255,255,255,0.25); }
+
+/* MAIN CONTENT */
+.main { flex: 1; margin-left: 240px; padding: 25px; transition: margin-left 0.3s ease; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.header h3 { color: #FF69B4; font-size: 1.6rem; flex: 1; }
+
+/* HAMBURGER BUTTON */
+.hamburger { display: none; font-size: 1.8rem; background: none; border: none; color: #FF69B4; cursor: pointer; transition: transform 0.3s; }
+.hamburger:hover { transform: scale(1.1); }
+
+/* REVIEWS CARD */
+section { margin-bottom: 40px; }
+section h2 { margin-bottom: 15px; color: #FF69B4; }
+.reviews-container {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
+.review-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 5px solid transparent; /* default */
+  transition: transform 0.2s;
+}
+.review-card:hover { transform: translateY(-2px); }
+.review-card p { font-size: 1rem; margin-bottom: 10px; color: #333; }
+.review-card strong { margin-bottom: 15px; display: block; }
+.review-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.approve { background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+.reject { background: #f44336; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+.remove { background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+
+.approve:hover, .reject:hover, .remove:hover { transform: scale(1.05); }
+
+/* STATUS COLORS */
+.pending { border-left-color: #FFC107; }
+.approved { border-left-color: #4CAF50; }
+.rejected { border-left-color: #f44336; }
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 992px) {
+  .main { margin-left: 0; padding: 20px; }
+  .sidebar { transform: translateX(-100%); position: fixed; box-shadow: none; }
+  .sidebar.active { transform: translateX(0); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+  .hamburger { display: block; }
+  .header { position: sticky; top: 0; background: #f6f9fc; z-index: 150; padding: 10px 0; }
+  body.sidebar-open { overflow: hidden; }
+}
+
+/* General Reset */
+/* body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f5f7;
+    color: #121212;
+} */
+
+/* Container */
+.container{display:flex;height:80vh;overflow:hidden;}
+#sessions{width:280px;background:#fff;box-shadow:2px 0 5px rgba(0,0,0,0.1);padding:10px;overflow-y:auto; max-height: 70vh;}
+#sessions h3{margin-top:0;font-size:1.2rem;text-align:center;color:#800080;}
+.session{display:flex;justify-content:space-between;align-items:center;padding:10px;cursor:pointer;border-bottom:1px solid #eee;transition:0.2s;}
+.session.active{background:linear-gradient(90deg,#800080,#FF69B4);color:#fff;font-weight:bold;}
+.session:hover{background:#f0e6f7;}
+#chat-area{flex:1;display:flex;flex-direction:column;background:#f9f9fb;}
+#chat-header{padding:15px;background:linear-gradient(90deg,#800080,#FF69B4);color:#fff;font-weight:bold;font-size:1.1rem;display:flex;align-items:center;gap:10px;}
+#messages{flex:1;padding:15px;overflow-y:auto;background:#e5e5e5;display:flex;flex-direction:column;gap:10px;}
+.message{display:flex;gap:10px;align-items:flex-end;max-width:100%;word-wrap:break-word;}
+.message.user{flex-direction:row;}
+.message.admin{flex-direction:row-reverse;}
+.message .avatar{width:35px;height:35px;flex-shrink:0;}
+.message .avatar img{width:100%;border-radius:50%;}
+.bubble{padding:10px 15px;border-radius:15px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.1);position:relative;}
+.message.user .bubble{background:#25D366;color:#fff;border-radius:15px 15px 15px 0;}
+.message.admin .bubble{background:#fff;color:#000;border-radius:15px 15px 0 15px;}
+.timestamp{font-size:0.75rem;color:#555;margin-top:3px;}
+.seen{color:#25D366;margin-left:5px;}
+#typing{font-size:0.9rem;color:#555;margin:5px 0 0 10px;display:none;}
+#input-container{display:flex;padding:15px;border-top:1px solid #ccc;background:#fff;gap:10px;}
+#input-container input[type="text"]{flex:1;padding:12px;border-radius:25px;border:1px solid #ccc;font-size:1rem;}
+#input-container button{background:linear-gradient(90deg,#800080,#FF69B4);color:#fff;border:none;padding:0 18px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:0.2s;}
+#input-container button:hover{opacity:0.9;}
+@media(max-width:768px){.container{flex-direction:column;}#sessions{width:100%;height:120px;overflow-x:auto;overflow-y:hidden;}#chat-area{flex:1;}}
+.unread-badge{background:#FF69B4;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;}
+
+
+
+.chat-modal {
+    position: fixed;
+    inset: 0; /* same as top:0; left:0; right:0; bottom:0 */
+    background: rgba(0,0,0,0.5);
+    display: none; /* hide by default */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.chat-modal-content {
+    background: transparent;
+    padding: 25px;
+    width: 90%;
+    height: 100%;
+    max-width: 450px;
+    border-radius: 12px;
+    /* box-shadow: 0 8px 25px rgba(0,0,0,0.2); */
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+/* Smooth animation */
+@keyframes fadeIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header */
+#chat-header-modal {
+    background: linear-gradient(90deg,#800080,#FF69B4);
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.close-modal {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.close-modal:hover { color: #ddd; }
+
+/* Messages panel */
+#messages-modal {
+    flex: 1;
+    padding: 15px;
+    max-height:70vh;
+    overflow-y: auto;
+    background: #e5ddd5;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    gap: 10px;
+    scroll-behavior: smooth;
+    
+}
+
+/* Message bubbles */
+.message {
+    display: flex;
+    align-items: flex-end;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message.user { flex-direction: row; align-self: flex-start; }
+.message.admin { flex-direction: row-reverse; align-self: flex-end; }
+
+.message .avatar {
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+}
+.message .avatar img { width: 100%; border-radius: 50%; }
+
+/* Bubble styling */
+.bubble {
+    padding: 10px 15px;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.message.user .bubble {
+    background: #25D366;
+    color: #fff;
+    border-radius: 0 15px 15px 15px;
+}
+.message.admin .bubble {
+    background: #fff;
+    color: #000;
+    border-radius: 15px 0 15px 15px;
+}
+
+/* Timestamp */
+.timestamp {
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: 3px;
+    display: block;
+    text-align: right;
+}
+.seen { color: #25D366; margin-left: 5px; }
+
+/* Typing indicator */
+#typing-modal {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 5px 15px;
+    display: none;
+}
+
+/* Input area */
+#input-container-modal {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background: #f1f1f1;
+    gap: 10px;
+}
+#input-container-modal input[type="text"] {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+#input-container-modal button {
+    background: linear-gradient(90deg,#800080,#FF69B4);
+    color:#fff;
+    border:none;
+    padding:0 18px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size: 1.2rem;
+    transition: 0.2s;
+}
+#input-container-modal button:hover { opacity:0.9; }
+
+/* Scrollbar for messages */
+#messages-modal::-webkit-scrollbar { width: 6px; }
+#messages-modal::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+#messages-modal::-webkit-scrollbar-track { background: transparent; }
+
+/* Responsive */
+@media(max-width: 600px){
+    .chat-modal-content { width: 95%; height: 75vh; }
+    .bubble { font-size: 0.9rem; }
+}
+
+
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h2><img src="lisawhite.png" alt="logo" width="auto" height="150px"/></h2>
+  <a href="dashboard.html"><i class="bi bi-bar-chart-line"></i> Dashboard</a>
+  <a href="allbookings.html" ><i class="bi bi-bookmarks"></i> Bookings</a>
+  <a href="customers.html" ><i class="bi bi-people-fill"></i> Customers</a>
+  <a href="services.html"><i class="bi bi-briefcase"></i> Manage Services</a>
+  <a href="reviews.html" ><i class="bi bi-star"></i> Customer Reviews</a>
+  <a href="discount.html"><i class="bi bi-gift"></i> Discounts</a>
+  <a href="chat.html" class="active"><i class="bi bi-chat-dots"></i> Chat</a>
+  <button class="logoutBtn" id="logoutBtn" style="background:#854385;color:#fff;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;">
+    <i class="bi bi-arrow-left-short"></i>Logout
+  </button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="header">
+    <button class="hamburger" id="menuBtn">☰</button>
+    <h3><i class="bi bi-chat-dots"></i> Admin Chat</h3>
+  </div>
+
+ <!-- admin-dashboard.html -->
+<br>
+<div class="container">
+    <div id="sessions">
+        <h3>Active Customers</h3>
+        <div id="session-list"></div>
+    </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chatModal" class="chat-modal">
+    <div class="chat-modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="chat-header-modal">Chat</div>
+        <div id="messages-modal"></div>
+        <div id="typing-modal">User is typing...</div>
+        <div id="input-container-modal">
+            <input type="text" id="admin-input-modal" placeholder="Type a message...">
+             <input type="file" id="admin-file-modal" style="display:none;">
+            <button id="admin-attach-modal"><i class="bi bi-paperclip"></i></button>
+            <button id="admin-send-modal">➤</button>
+        </div>
+    </div>
+</div>
+
+<audio id="newMessageSound" src="notification.wav" preload="auto"></audio>
+<script type="module">
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, query, onSnapshot, addDoc, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCx3I1FRYpOPi2ponH88fapPZFK0TUX3xk",
+    authDomain: "lisaartistryspa-761ac.firebaseapp.com",
+    projectId: "lisaartistryspa-761ac",
+    storageBucket: "lisaartistryspa-761ac.firebasestorage.app",
+    messagingSenderId: "974775812115",
+    appId: "1:974775812115:web:ba03bce66cf7eb147f3fe6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// --- PLAY SOUND ---
+function playNotificationSound() {
+    const sound = document.getElementById("newMessageSound");
+    if (sound) sound.play().catch(()=>{});
+}
+
+// --- DESKTOP NOTIFICATION ---
+function triggerNotificationPopup(sessionId, text) {
+    if (Notification.permission !== "granted") return;
+
+    new Notification("New Message from " + sessionId, {
+        body: text,
+        icon: "lisa.png"
+    });
+}
+
+
+const sessionList = document.getElementById('session-list');
+const messagesDiv = document.getElementById('messages');
+const chatHeader = document.getElementById('chat-header');
+const adminInput = document.getElementById('admin-input');
+const adminSend = document.getElementById('admin-send');
+const typingIndicator = document.getElementById('typing');
+
+
+
+let currentSessionId = null;
+
+// Listen for sessions
+const chatsRef = collection(db,'chats');
+
+let lastMessageTimestamps = {}; // store last timestamp per session for notification control
+
+onSnapshot(chatsRef, snapshot => {
+    const sessions = {};
+    const unreadCounts = {};
+
+    snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+
+        // Track sessions
+        if (!sessions[data.sessionId]) sessions[data.sessionId] = data;
+
+        // Track unread messages
+        if (data.sender === 'user' && !data.seen) {
+            unreadCounts[data.sessionId] = (unreadCounts[data.sessionId] || 0) + 1;
+        }
+
+        // -------------------------
+        //  NEW MESSAGE NOTIFICATION
+        // -------------------------
+        if (data.sender === "user") {
+            const sid = data.sessionId;
+            const ts = data.timestamp;
+
+            // Notify ONLY if:
+            // 1. Message is newer than last stored 
+            // 2. Message is not seen
+            if (!lastMessageTimestamps[sid] || ts > lastMessageTimestamps[sid]) {
+
+                // Update latest timestamp
+                lastMessageTimestamps[sid] = ts;
+
+                // Only trigger alert if it's unread
+                if (!data.seen) {
+                    triggerNotificationPopup(sid, data.text);
+                    playNotificationSound();
+                }
+            }
+        }
+    });
+
+    // Render session list
+    sessionList.innerHTML = '';
+    Object.keys(sessions).forEach(sid => {
+        const div = document.createElement('div');
+        div.classList.add('session');
+        if (currentSessionId === sid) div.classList.add('active');
+        div.textContent = sid;
+
+        if (unreadCounts[sid]) {
+            const badge = document.createElement('span');
+            badge.classList.add('unread-badge');
+            badge.textContent = unreadCounts[sid];
+            div.appendChild(badge);
+        }
+
+        div.addEventListener('click', () => selectSession(sid));
+        sessionList.appendChild(div);
+    });
+});
+
+
+const chatModal = document.getElementById('chatModal');
+const messagesModal = document.getElementById('messages-modal');
+const adminInputModal = document.getElementById('admin-input-modal');
+const adminSendModal = document.getElementById('admin-send-modal');
+const chatHeaderModal = document.getElementById('chat-header-modal');
+const typingModal = document.getElementById('typing-modal');
+const closeModal = document.querySelector('.close-modal');
+
+function selectSession(sid){
+    currentSessionId = sid;
+    chatHeaderModal.textContent = "Chat: " + sid;
+    chatModal.style.display = 'block';
+    renderMessagesModal();
+    markAsSeen(sid);
+}
+
+// Close modal
+closeModal.addEventListener('click', () => {
+    chatModal.style.display = 'none';
+});
+
+// Click outside modal closes
+window.addEventListener('click', (e)=>{
+    if(e.target === chatModal) chatModal.style.display = 'none';
+});
+
+
+// Mark messages as seen
+async function markAsSeen(sid){
+    snapshot = await query(chatsRef);
+    onSnapshot(snapshot, snap=>{
+        snap.docs.forEach(async docSnap=>{
+            const msg = docSnap.data();
+            if(msg.sessionId===sid && msg.sender==='user' && !msg.seen){
+                await updateDoc(doc(db,'chats',docSnap.id), {seen:true});
+            }
+        });
+    });
+}
+
+
+function renderMessagesModal(){
+    if(!currentSessionId) return;
+    const q = query(chatsRef, orderBy('timestamp'));
+    onSnapshot(q, snapshot=>{
+        messagesModal.innerHTML='';
+        let typing=false;
+
+        snapshot.docs.forEach(docSnap=>{
+            const msg = docSnap.data();
+            if(msg.sessionId===currentSessionId){
+                const div = document.createElement('div');
+                div.classList.add('message', msg.sender==='admin'?'admin':'user');
+
+                // Avatar
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('avatar');
+                const img = document.createElement('img');
+                img.src = msg.sender==='admin'?'admin-avatar.png':'user-avatar.jpg';
+                avatarDiv.appendChild(img);
+
+                // Bubble
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+                if(msg.file){
+                    bubble.innerHTML=`<a href="${msg.text}" target="_blank">📎 File</a>`;
+                } else bubble.textContent = msg.text;
+
+                // Timestamp
+                const ts = document.createElement('span');
+                ts.classList.add('timestamp');
+                ts.innerHTML = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + (msg.seen?' <span class="seen">✔✔</span>':'');
+
+                const container = document.createElement('div');
+                container.appendChild(bubble);
+                container.appendChild(ts);
+
+                div.appendChild(avatarDiv);
+                div.appendChild(container);
+
+                messagesModal.appendChild(div);
+            }
+        });
+
+        // Auto scroll to bottom
+        messagesModal.scrollTop = messagesModal.scrollHeight;
+    });
+}
+
+// Send message
+adminSendModal.addEventListener('click', async ()=>{
+    const text = adminInputModal.value.trim();
+    if(!text || !currentSessionId) return;
+    await addDoc(chatsRef,{
+        text,
+        sender:'admin',
+        sessionId: currentSessionId,
+        to:'user',
+        timestamp: Date.now(),
+        seen:false
+    });
+    adminInputModal.value='';
+});
+
+const attachBtn = document.getElementById('admin-attach-modal');
+const fileInput = document.getElementById('admin-file-modal');
+
+attachBtn.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', async (e) => {
+    if (!currentSessionId) return;
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileRef = storageRef(storage, `chat_files/${currentSessionId}/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(fileRef, file);
+
+    uploadTask.on('state_changed',
+        (snapshot) => {
+            // optional: you can implement a progress bar here
+        },
+        (error) => {
+            console.error("File upload error:", error);
+        },
+        async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+            // Save file message in Firestore
+            await addDoc(chatsRef, {
+                text: downloadURL,
+                file: true,
+                sender: 'admin',
+                sessionId: currentSessionId,
+                to: 'user',
+                timestamp: Date.now(),
+                seen: false
+            });
+
+            fileInput.value = ''; // reset file input
+        }
+    );
+});
+
+
+// Optional: typing indicator
+adminInputModal.addEventListener("input", () => {
+    if(!currentSessionId) return;
+
+    setDoc(doc(db, "typingStatus", currentSessionId), {
+        typing: adminInputModal.value.length > 0,
+        who: "admin",
+        updatedAt: Date.now()
+    });
+});
+</script>
+
+</body>
+</html>
