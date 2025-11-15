@@ -381,6 +381,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// Sidebar toggle
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+menuBtn.addEventListener('click',()=>{
+  sidebar.classList.toggle('active');
+  document.body.classList.toggle('sidebar-open');
+});
+document.querySelectorAll('.sidebar a').forEach(link=>{
+  link.addEventListener('click',()=>{
+    if(window.innerWidth<=992){
+      sidebar.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    }
+  });
+});
+
 // --- PLAY SOUND ---
 function playNotificationSound() {
     const sound = document.getElementById("newMessageSound");
